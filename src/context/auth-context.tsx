@@ -48,7 +48,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const axiosInstance = createAxiosInstance();
-
     const isAuthenticated = !!accessToken;
 
     const isTokenExpired = useCallback((token: string): boolean => {
@@ -59,9 +58,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             return true;
         }
     }, []);
-    useEffect(() => {
-        console.log("access token", accessToken);
-    }, [accessToken]);
 
     const refreshAccessToken = useCallback(async (): Promise<string | null> => {
         setIsRefreshing(true);
@@ -70,7 +66,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                 "/refresh"
             );
             const newAccessToken = response.data?.data?.access_token;
-            console.log("");
             setAccessToken(newAccessToken);
             return newAccessToken;
         } catch (err) {
@@ -86,6 +81,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     useEffect(() => {
         const requestInterceptor = axiosInstance.interceptors.request.use(
             async (config: AxiosRequestConfig) => {
+                console.log("Acsdsdn");
                 // if (!accessToken) return config;
 
                 if (!accessToken) {
@@ -131,19 +127,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     const fetchUser = async () => {
         // if (isLoading) return; // Prevent multiple simultaneous fetches
         setIsLoading(true);
-        // setIsRefreshing(true);
-        console.log("REfresh the token");
 
         try {
             let token = accessToken;
 
             // Wait for token refresh if it's missing or expired
             if (!token || isTokenExpired(token)) {
-                console.log("token expired");
                 
                 token = await refreshAccessToken();
-                console.log("token expired refreshAccessToken");
-
                 if (!token) return; // Exit early if refresh failed
             }
 
@@ -159,7 +150,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             logout();
         } finally {
             setIsLoading(false);
-            setIsRefreshing(false);
         }
     };
 
@@ -171,11 +161,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         user,
         logout,
         axiosInstance,
+        isAuthenticated,
         fetchUser,
         isLoading,
         error,
-        // isRefreshing,
-        isAuthenticated,
     };
 
     return (

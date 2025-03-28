@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/auth-context";
 import { Button } from "../ui/button";
 import {
@@ -17,32 +15,7 @@ import {
     LogOut,
 } from "lucide-react";
 export function Dashboard() {
-    const { user, isAuthenticated, logout, fetchUser } = useAuth();
-    const navigate = useNavigate();
-    const [loading, setLoading] = useState(true);
-
-    // const { data, loading: loadingUsers } = getUsers();
-
-    // useEffect(() => {
-    //     // if (!isAuthenticated) {
-    //     //     navigate("/");
-    //     //     return;
-    //     // }
-
-    //     const loadUser = async () => {
-    //         try {
-    //             await fetchUser();
-    //         } catch (error) {
-    //             console.error("Failed to fetch user:", error);
-    //             logout();
-    //             navigate("/");
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
-
-    //     loadUser();
-    // }, [isAuthenticated, navigate]);
+    const { user, logout, isLoading } = useAuth();
 
     return (
         <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -86,7 +59,7 @@ export function Dashboard() {
             {/* Main content */}
             <div className="flex-1 p-6">
                 <div className="mb-6">
-                    {!loading && (
+                    {!isLoading && (
                         <>
                             <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
                                 Welcome, {user?.name}

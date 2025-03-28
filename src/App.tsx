@@ -7,21 +7,20 @@ import {
 import { AuthProvider, useAuth } from "./context/auth-context";
 import { AuthTabs } from "./components/auth/auth-tabs";
 import { Dashboard } from "./components/dashboard/dashboard";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const { isLoading, fetchUser, isAuthenticated } = useAuth();
+    const {  isLoading, fetchUser, isAuthenticated } = useAuth();
     useEffect(() => {
         fetchUser();
     }, []);
-
 
     if (isLoading) {
         return <div>Loading...</div>; // Show a loader until auth state is ready
     }
     if (!isAuthenticated && !isLoading) {
-        console.log("Is user authenticated", isAuthenticated, isLoading);
+        // console.log("Is user authenticated", isAuthenticated, isLoading, isAuthLoading);
         return <Navigate to="/" />;
     }
 
