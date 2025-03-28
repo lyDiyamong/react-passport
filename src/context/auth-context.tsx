@@ -12,6 +12,7 @@ import { User } from "../types/user.type";
 
 interface AuthContextType {
     accessToken: string | null;
+    setAccessToken: (token: string) => void;
     login: (token: string) => void;
     user: User | null;
     logout: () => void;
@@ -43,7 +44,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const axiosInstance = createAxiosInstance();
 
@@ -57,14 +59,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             return true;
         }
     }, []);
+    useEffect(() => {
+        console.log("access token", accessToken);
+    }, [accessToken]);
 
     const refreshAccessToken = useCallback(async (): Promise<string | null> => {
-        setIsLoading(true);
+        setIsRefreshing(true);
         try {
             const response = await axiosInstance.get<{ access_token: string }>(
                 "/refresh"
             );
             const newAccessToken = response.data?.data?.access_token;
+            console.log("");
             setAccessToken(newAccessToken);
             return newAccessToken;
         } catch (err) {
@@ -72,7 +78,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             logout();
             return null;
         } finally {
-            setIsLoading(false);
+            setIsRefreshing(false);
         }
     }, [axiosInstance]);
 
@@ -80,11 +86,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     useEffect(() => {
         const requestInterceptor = axiosInstance.interceptors.request.use(
             async (config: AxiosRequestConfig) => {
-                if (!accessToken) return config;
+                // if (!accessToken) return config;
 
-                if (isTokenExpired(accessToken)) {
+                if (!accessToken) {
                     try {
                         const newToken = await refreshAccessToken();
+                        console.log("new token", newToken);
                         if (newToken) {
                             config.headers = config.headers || {};
                             config.headers.Authorization = `Bearer ${newToken}`;
@@ -109,7 +116,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }, [accessToken, axiosInstance, isTokenExpired, refreshAccessToken]);
 
     const login = useCallback((token: string) => {
-        console.log("login", token);
         setAccessToken(token);
         setError(null);
     }, []);
@@ -122,58 +128,54 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         delete axiosInstance.defaults.headers.common["Authorization"];
     }, [axiosInstance]);
 
-    const fetchUser = useCallback(async () => {
-        if (!accessToken || isLoading) return;
-
+    const fetchUser = async () => {
+        // if (isLoading) return; // Prevent multiple simultaneous fetches
         setIsLoading(true);
+        // setIsRefreshing(true);
+        console.log("REfresh the token");
+
         try {
-            if (isTokenExpired(accessToken)) {
-                const newToken = await refreshAccessToken();
-                if (!newToken) return;
+            let token = accessToken;
+
+            // Wait for token refresh if it's missing or expired
+            if (!token || isTokenExpired(token)) {
+                console.log("token expired");
+                
+                token = await refreshAccessToken();
+                console.log("token expired refreshAccessToken");
+
+                if (!token) return; // Exit early if refresh failed
             }
 
-            const response = await axiosInstance.get<User>("/me");
+            // Set Authorization header explicitly before fetching user
+            axiosInstance.defaults.headers.common[
+                "Authorization"
+            ] = `Bearer ${token}`;
+
+            const response = await axiosInstance.get<{ data: User }>("/me");
             setUser(response.data.data);
         } catch (err) {
             setError("Failed to fetch user data");
             logout();
         } finally {
             setIsLoading(false);
+            setIsRefreshing(false);
         }
-    }, [
-        accessToken,
-        isLoading,
-        axiosInstance,
-        isTokenExpired,
-        refreshAccessToken,
-        logout,
-    ]);
+    };
 
-    // Initialize auth state
-    useEffect(() => {
-        const initializeAuth = async () => {
-            if (!accessToken || user) return; // Don't fetch if we already have user data or no token
-
-            try {
-                await fetchUser();
-            } catch (err) {
-                setError("Initialization failed");
-            }
-        };
-
-        initializeAuth();
-    }, [accessToken, user, fetchUser]);
 
     const value = {
         accessToken,
+        setAccessToken,
         login,
         user,
         logout,
-        isAuthenticated,
         axiosInstance,
         fetchUser,
         isLoading,
         error,
+        // isRefreshing,
+        isAuthenticated,
     };
 
     return (

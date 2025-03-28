@@ -1,37 +1,9 @@
-import {
-    BrowserRouter as Router,
-    Routes,
-    Route,
-    Navigate,
-} from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/auth-context";
-import { AuthTabs } from "./components/auth/auth-tabs";
-import { Dashboard } from "./components/dashboard/dashboard";
-import { useEffect, useState } from "react";
-
-// Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const { isLoading, fetchUser, isAuthenticated } = useAuth();
-    useEffect(() => {
-        fetchUser();
-    }, []);
-
-
-    if (isLoading) {
-        return <div>Loading...</div>; // Show a loader until auth state is ready
-    }
-    if (!isAuthenticated && !isLoading) {
-        console.log("Is user authenticated", isAuthenticated, isLoading);
-        return <Navigate to="/" />;
-    }
-
-    if (isAuthenticated && !isLoading) {
-        return <>{children}</>;
-    }
-};
+import { Route, Routes } from "react-router-dom";
+import ProtectedRoute from "./protect-route";
+import { AuthTabs } from "../components/auth/auth-tabs";
+import { Dashboard } from "../components/dashboard/dashboard";
 
 function AppRoutes() {
-
     return (
         <Routes>
             <Route
@@ -64,14 +36,4 @@ function AppRoutes() {
     );
 }
 
-function App() {
-    return (
-        <Router>
-            <AuthProvider>
-                <AppRoutes />
-            </AuthProvider>
-        </Router>
-    );
-}
-
-export default App;
+export default AppRoutes;

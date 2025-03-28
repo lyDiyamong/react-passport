@@ -16,32 +16,33 @@ import {
     FileText,
     LogOut,
 } from "lucide-react";
-
 export function Dashboard() {
     const { user, isAuthenticated, logout, fetchUser } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (!isAuthenticated) {
-            navigate("/");
-            return;
-        }
+    // const { data, loading: loadingUsers } = getUsers();
 
-        const loadUser = async () => {
-            try {
-                await fetchUser();
-            } catch (error) {
-                console.error("Failed to fetch user:", error);
-                logout();
-                navigate("/");
-            } finally {
-                setLoading(false);
-            }
-        };
+    // useEffect(() => {
+    //     // if (!isAuthenticated) {
+    //     //     navigate("/");
+    //     //     return;
+    //     // }
 
-        loadUser();
-    }, [isAuthenticated, navigate]);
+    //     const loadUser = async () => {
+    //         try {
+    //             await fetchUser();
+    //         } catch (error) {
+    //             console.error("Failed to fetch user:", error);
+    //             logout();
+    //             navigate("/");
+    //         } finally {
+    //             setLoading(false);
+    //         }
+    //     };
+
+    //     loadUser();
+    // }, [isAuthenticated, navigate]);
 
     return (
         <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -94,7 +95,12 @@ export function Dashboard() {
                                 Here's what's happening with your account today.
                             </p>
                         </>
+                        
                     )}
+                    {/* <Button onClick={() => getUsers()}>Fetch Users</Button> */}
+
+                    {/* {loadingUsers && <p>Loading...</p>}
+                    {data && <p>{data.length} users found</p>} */}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
