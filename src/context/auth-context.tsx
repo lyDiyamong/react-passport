@@ -20,6 +20,7 @@ interface AuthContextType {
     axiosInstance: AxiosInstance;
     fetchUser: () => Promise<void>;
     isLoading: boolean;
+    isRefreshing: boolean;
     error: string | null;
 }
 
@@ -81,13 +82,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     useEffect(() => {
         const requestInterceptor = axiosInstance.interceptors.request.use(
             async (config: AxiosRequestConfig) => {
-                console.log("Acsdsdn");
-                // if (!accessToken) return config;
 
                 if (!accessToken) {
                     try {
                         const newToken = await refreshAccessToken();
-                        console.log("new token", newToken);
                         if (newToken) {
                             config.headers = config.headers || {};
                             config.headers.Authorization = `Bearer ${newToken}`;
@@ -127,6 +125,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     const fetchUser = async () => {
         // if (isLoading) return; // Prevent multiple simultaneous fetches
         setIsLoading(true);
+        setIsRefreshing(true);
 
         try {
             let token = accessToken;
@@ -135,6 +134,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             if (!token || isTokenExpired(token)) {
                 
                 token = await refreshAccessToken();
+
                 if (!token) return; // Exit early if refresh failed
             }
 
@@ -150,9 +150,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
             logout();
         } finally {
             setIsLoading(false);
+            setIsRefreshing(false);
         }
     };
-
 
     const value = {
         accessToken,
@@ -165,6 +165,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         fetchUser,
         isLoading,
         error,
+        isRefreshing,
     };
 
     return (

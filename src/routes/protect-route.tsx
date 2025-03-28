@@ -4,27 +4,22 @@ import { Navigate } from "react-router-dom";
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const { isAuthenticated, setAccessToken } = useAuth();
+    const {  isLoading, fetchUser, isAuthenticated } = useAuth();
     useEffect(() => {
-        // On page load, try to refresh the token
-        const refreshToken = async () => {
-          try {
-            const response = await axios.get<{data: {access_token: string}}>('/refresh-token', { withCredentials: true });
-            setAccessToken(response.data?.data?.access_token);
-            axios.defaults.headers.common['Authorization'] = `Bearer ${response.data?.data?.access_token}`;
-          } catch (error) {
-            console.error("Refresh failed", error);
-            // Redirect to login if refresh fails
-          }
-        };
-    
-        refreshToken();
-      }, []);
-   
-    if (!isAuthenticated) {
+        fetchUser();
+    }, []);
+
+    if (isLoading) {
+        return <div>Loading...</div>; // Show a loader until auth state is ready
+    }
+    if (!isAuthenticated && !isLoading) {
+        // console.log("Is user authenticated", isAuthenticated, isLoading, isAuthLoading);
         return <Navigate to="/" />;
     }
-    return <>{children}</>;
+
+    if (isAuthenticated && !isLoading) {
+        return <>{children}</>;
+    }
 };
 
 export default ProtectedRoute
